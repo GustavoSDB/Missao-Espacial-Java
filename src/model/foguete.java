@@ -1,3 +1,4 @@
+package model;
 
 public class foguete {
     private String nome;
@@ -14,6 +15,7 @@ public class foguete {
 
     public void abastecer(float quantidade){
         combustivelRestante = combustivelRestante + quantidade;
+        System.out.println("Foguete: " + nome + " abastecido com sucesso! Combustivel:" + combustivelRestante);
     }
 
     public void lancar(){
@@ -26,10 +28,13 @@ public class foguete {
     }
 
     public String toString(){
-        return "Nome: " + nome + "\nCombustivel restante:" + combustivelRestante + "\n Carga maxima: " + cargaMaxima + "\nStatus: " + status;
+        return "Nome: " + nome + "\nCombustivel restante:" + combustivelRestante + "\n Carga maxima: " + cargaMaxima + "\nStatus: " + status + "\n===================================";
     }
 
     public String getNome() {
         return nome;
     }
+    public String getStatus() { return status;}
+    public float getCombustivelRestante() { return combustivelRestante;}
+    public float getCargaMaxima() { return cargaMaxima;}
 }

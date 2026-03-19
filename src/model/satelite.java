@@ -1,3 +1,4 @@
+package model;
 
 public class satelite {
 
@@ -16,24 +17,25 @@ public class satelite {
     }
 
     public void ativarPaineis(float quantidade){
-        if (energia + quantidade <= 100){
+        if (energia + quantidade <= 500 && status.equals("Em orbita")){
             energia = energia + quantidade;
             System.out.println("Paineis atualizado com sucesso!");
+            System.out.println("Energia atual: " + energia);
         }else{
-            System.out.println("Limite de energia ultrapassado!");
+            System.out.println("Limite de energia ultrapassado ou satelite não está em orbita!");
         }
     }
 
     public String enviarDados(String mensagem){
-        if (status.equals("Ativo")){
+        if (status.equals("Em orbita")){
             return "Satelite: " + nome + " mensagem: " + mensagem;
         }else{
-            return "O Satelite precisa estar ativo";
+            return "O Satelite precisa estar Em orbita!";
         }
     }
 
     public String toString(){
-        return "Nome: " + nome + "massa: " + massa + "orbita alvo: " + orbitaAlvo + "energia: " + energia + "status: " + status;
+        return "Nome: " + nome + "\nmassa: " + massa + "\norbita alvo: " + orbitaAlvo + "\nenergia: " + energia + "\nstatus: " + status + "\n=====================";
     }
 
     public void orbita(){
@@ -47,6 +49,10 @@ public class satelite {
     public float getMassa() {
         return massa;
     }
+    public String getOrbitaAlvo() {return orbitaAlvo;}
+    public float getEnergia() {return energia;}
+    public String getStatus() {return status;}
+
 
 
 }
