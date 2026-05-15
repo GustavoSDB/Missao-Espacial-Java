@@ -57,6 +57,7 @@ async function refreshResources() {
         const status = await api("/status");
         state.rockets = (status.foguetes ?? []).map(normalizeRocket);
         state.satellites = (status.satelites ?? []).map(normalizeSatellite);
+        syncMissionsWithResources();
         render();
     } catch (error) {
         addLog("API indisponivel", error.message);
@@ -147,11 +148,13 @@ function render() {
 }
 
 function renderCounters() {
+    const activeMissionCount = getActiveMissionCount();
+
     elements.rocketCount.textContent = state.rockets.length;
     elements.satelliteCount.textContent = state.satellites.length;
-    elements.missionCount.textContent = state.missions.length;
+    elements.missionCount.textContent = activeMissionCount;
     elements.messageCount.textContent = state.transmissions;
-    elements.generalStatus.textContent = state.missions.length > 0 ? "Missao ativa" : "Operacional";
+    elements.generalStatus.textContent = activeMissionCount > 0 ? "Missao ativa" : "Operacional";
 }
 
 function renderRockets() {
@@ -530,6 +533,44 @@ function findRocket(id) {
 
 function findSatellite(id) {
     return state.satellites.find((satellite) => satellite.id === id);
+}
+
+function syncMissionsWithResources() {
+    const previousCount = state.missions.length;
+
+    state.missions = state.missions.filter((mission) => {
+        const rocket = findRocket(String(mission.rocketId));
+        const satellite = findSatellite(String(mission.satelliteId));
+        return isRocketInMission(rocket) && isSatelliteInMission(satellite);
+    });
+
+    if (state.missions.length !== previousCount) {
+        saveMeta();
+    }
+}
+
+function getActiveMissionCount() {
+    const savedMissionCount = state.missions.filter((mission) => {
+        const rocket = findRocket(String(mission.rocketId));
+        const satellite = findSatellite(String(mission.satelliteId));
+        return isRocketInMission(rocket) && isSatelliteInMission(satellite);
+    }).length;
+
+    if (savedMissionCount > 0) {
+        return savedMissionCount;
+    }
+
+    const activeRockets = state.rockets.filter(isRocketInMission).length;
+    const activeSatellites = state.satellites.filter(isSatelliteInMission).length;
+    return Math.min(activeRockets, activeSatellites);
+}
+
+function isRocketInMission(rocket) {
+    return rocket?.status === "Em missao";
+}
+
+function isSatelliteInMission(satellite) {
+    return satellite?.status === "Em orbita" || satellite?.status === "Paineis ativos";
 }
 
 function createId(prefix) {

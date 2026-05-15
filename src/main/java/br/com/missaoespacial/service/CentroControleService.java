@@ -3,70 +3,73 @@ package br.com.missaoespacial.service;
 import br.com.missaoespacial.dto.StatusMissaoResponse;
 import br.com.missaoespacial.model.Foguete;
 import br.com.missaoespacial.model.Satelite;
-import java.util.Comparator;
+import br.com.missaoespacial.repository.FogueteRepository;
+import br.com.missaoespacial.repository.SateliteRepository;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CentroControleService {
 
-    private final Map<Long, Foguete> foguetes = new ConcurrentHashMap<>();
-    private final Map<Long, Satelite> satelites = new ConcurrentHashMap<>();
-    private final AtomicLong fogueteSequence = new AtomicLong(1);
-    private final AtomicLong sateliteSequence = new AtomicLong(1);
+    private final FogueteRepository fogueteRepository;
+    private final SateliteRepository sateliteRepository;
 
+    public CentroControleService(FogueteRepository fogueteRepository, SateliteRepository sateliteRepository) {
+        this.fogueteRepository = fogueteRepository;
+        this.sateliteRepository = sateliteRepository;
+    }
+
+    @Transactional
     public Foguete adicionarFoguete(Foguete foguete) {
         validarFoguete(foguete);
-        long id = fogueteSequence.getAndIncrement();
-        foguete.setId(id);
-        foguetes.put(id, foguete);
-        return foguete;
+        return fogueteRepository.save(foguete);
     }
 
+    @Transactional
     public Satelite adicionarSatelite(Satelite satelite) {
         validarSatelite(satelite);
-        long id = sateliteSequence.getAndIncrement();
-        satelite.setId(id);
-        satelites.put(id, satelite);
-        return satelite;
+        return sateliteRepository.save(satelite);
     }
 
+    @Transactional(readOnly = true)
     public List<Foguete> listarFoguetes() {
-        return foguetes.values().stream()
-                .sorted(Comparator.comparing(Foguete::getId))
-                .collect(Collectors.toList());
+        return fogueteRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
 
+    @Transactional(readOnly = true)
     public List<Satelite> listarSatelites() {
-        return satelites.values().stream()
-                .sorted(Comparator.comparing(Satelite::getId))
-                .collect(Collectors.toList());
+        return sateliteRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
 
+    @Transactional
     public Foguete abastecerFoguete(long fogueteId, float quantidade) {
         Foguete foguete = buscarFoguete(fogueteId);
         foguete.abastecer(quantidade);
-        return foguete;
+        return fogueteRepository.save(foguete);
     }
 
+    @Transactional
     public Satelite ativarPaineis(long sateliteId, String painel, float quantidade) {
         Satelite satelite = buscarSatelite(sateliteId);
         satelite.ativarPaineis(painel, quantidade);
-        return satelite;
+        return sateliteRepository.save(satelite);
     }
 
+    @Transactional
     public String enviarDados(long sateliteId, String mensagem) {
         if (mensagem == null || mensagem.isBlank()) {
             throw new IllegalArgumentException("A mensagem nao pode estar vazia.");
         }
-        return buscarSatelite(sateliteId).enviarDados(mensagem);
+        Satelite satelite = buscarSatelite(sateliteId);
+        String resposta = satelite.enviarDados(mensagem);
+        sateliteRepository.save(satelite);
+        return resposta;
     }
 
+    @Transactional
     public String iniciarMissao(long sateliteId, long fogueteId) {
         Satelite satelite = buscarSatelite(sateliteId);
         Foguete foguete = buscarFoguete(fogueteId);
@@ -80,27 +83,24 @@ public class CentroControleService {
         }
 
         satelite.orbita();
+        fogueteRepository.save(foguete);
+        sateliteRepository.save(satelite);
         return "Missao iniciada. Foguete: " + foguete.getNome() + ". Satelite: " + satelite.getNome() + ".";
     }
 
+    @Transactional(readOnly = true)
     public StatusMissaoResponse statusMissao() {
         return new StatusMissaoResponse(listarSatelites(), listarFoguetes());
     }
 
     private Foguete buscarFoguete(long id) {
-        Foguete foguete = foguetes.get(id);
-        if (foguete == null) {
-            throw new NoSuchElementException("Foguete nao encontrado: " + id);
-        }
-        return foguete;
+        return fogueteRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Foguete nao encontrado: " + id));
     }
 
     private Satelite buscarSatelite(long id) {
-        Satelite satelite = satelites.get(id);
-        if (satelite == null) {
-            throw new NoSuchElementException("Satelite nao encontrado: " + id);
-        }
-        return satelite;
+        return sateliteRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Satelite nao encontrado: " + id));
     }
 
     private void validarFoguete(Foguete foguete) {

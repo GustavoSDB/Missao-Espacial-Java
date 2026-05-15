@@ -26,5 +26,8 @@ bin/
 ### VS Code ###
 .vscode/
 
+### Local environment ###
+.env
+
 ### Mac OS ###
 .DS_Store

@@ -1,17 +1,47 @@
 package br.com.missaoespacial.model;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "satelites")
 public class Satelite {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String nome;
+
+    @Column(nullable = false)
     private float massa;
+
+    @Column(nullable = false)
     private String orbitaAlvo;
+
+    @Column(nullable = false)
     private float energia;
+
+    @Column(nullable = false)
     private String status;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "satelite_paineis", joinColumns = @JoinColumn(name = "satelite_id"))
+    @Column(name = "painel", nullable = false)
     private List<String> paineis = new ArrayList<>();
+
+    @Column(length = 1000)
     private String ultimaMensagem;
 
     public Satelite() {
