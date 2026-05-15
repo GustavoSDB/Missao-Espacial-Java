@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="img/icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <title>Central de Miss&otilde;es Espaciais</title>
+</head>
+<body>
+    <div class="space-layer" aria-hidden="true">
+        <div class="planet planet-earth"></div>
+        <div class="planet planet-mars"></div>
+        <div class="planet planet-gas"></div>
+        <div class="orbit-line orbit-one"></div>
+        <div class="orbit-line orbit-two"></div>
+        <img class="rocket-animated" src="img/icon.png" alt="">
+        <div class="satellite-animated">
+            <span class="satellite-core"></span>
+            <span class="solar-panel left"></span>
+            <span class="solar-panel right"></span>
+            <span class="antenna"></span>
+        </div>
+    </div>
+
+    <div class="app-shell">
+        <header class="mission-header">
+            <div>
+                <p class="eyebrow">Centro orbital</p>
+                <h1>Gerenciamento de Miss&otilde;es Espaciais</h1>
+            </div>
+            <div class="mission-time">
+                <span>Status geral</span>
+                <strong id="generalStatus">Operacional</strong>
+            </div>
+        </header>
+
+        <section class="status-strip" aria-label="Resumo da frota">
+            <article>
+                <span>Foguetes</span>
+                <strong id="rocketCount">0</strong>
+            </article>
+            <article>
+                <span>Sat&eacute;lites</span>
+                <strong id="satelliteCount">0</strong>
+            </article>
+            <article>
+                <span>Miss&otilde;es</span>
+                <strong id="missionCount">0</strong>
+            </article>
+            <article>
+                <span>Transmiss&otilde;es</span>
+                <strong id="messageCount">0</strong>
+            </article>
+        </section>
+
+        <main class="mission-grid">
+            <section class="panel panel-wide">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Hangar</p>
+                        <h2>Lista dos foguetes</h2>
+                    </div>
+                </div>
+                <div class="resource-list" id="rocketList"></div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Cadastro</p>
+                        <h2>Criar novo foguete</h2>
+                    </div>
+                </div>
+                <form id="rocketForm" class="control-form">
+                    <label>
+                        Nome
+                        <input type="text" name="nome" placeholder="Ex.: Artemis IX" required>
+                    </label>
+                    <label>
+                        Combust&iacute;vel inicial (L)
+                        <input type="number" name="combustivel" min="0" placeholder="1200" required>
+                    </label>
+                    <label>
+                        Carga m&aacute;xima (kg)
+                        <input type="number" name="carga" min="1" placeholder="25000" required>
+                    </label>
+                    <label>
+                        Status
+                        <select name="status" required>
+                            <option value="Pronto">Pronto</option>
+                            <option value="Em teste">Em teste</option>
+                            <option value="Manutencao">Manuten&ccedil;&atilde;o</option>
+                            <option value="Reservado">Reservado</option>
+                        </select>
+                    </label>
+                    <button type="submit">Criar foguete</button>
+                </form>
+            </section>
+
+            <section class="panel panel-wide">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Orbital</p>
+                        <h2>Lista dos sat&eacute;lites</h2>
+                    </div>
+                </div>
+                <div class="resource-list" id="satelliteList"></div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Cadastro</p>
+                        <h2>Criar novo sat&eacute;lite</h2>
+                    </div>
+                </div>
+                <form id="satelliteForm" class="control-form">
+                    <label>
+                        Nome
+                        <input type="text" name="nome" placeholder="Ex.: Aurora-3" required>
+                    </label>
+                    <label>
+                        Massa (kg)
+                        <input type="number" name="massa" min="1" placeholder="980" required>
+                    </label>
+                    <label>
+                        &Oacute;rbita alvo
+                        <input type="text" name="orbita" placeholder="Ex.: LEO 550 km" required>
+                    </label>
+                    <label>
+                        Energia (%)
+                        <input type="number" name="energia" min="0" max="100" placeholder="80" required>
+                    </label>
+                    <label>
+                        Status
+                        <select name="status" required>
+                            <option value="Disponivel">Dispon&iacute;vel</option>
+                            <option value="Em calibracao">Em calibra&ccedil;&atilde;o</option>
+                            <option value="Em orbita">Em &oacute;rbita</option>
+                            <option value="Inativo">Inativo</option>
+                        </select>
+                    </label>
+                    <button type="submit">Criar sat&eacute;lite</button>
+                </form>
+            </section>
+
+            <section class="panel panel-operations">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Controle</p>
+                        <h2>Opera&ccedil;&otilde;es da miss&atilde;o</h2>
+                    </div>
+                </div>
+
+                <div class="operation-grid">
+                    <form id="missionForm" class="operation-form">
+                        <h3>Iniciar miss&atilde;o</h3>
+                        <label>
+                            Foguete
+                            <select name="rocket" required></select>
+                        </label>
+                        <label>
+                            Sat&eacute;lite
+                            <select name="satellite" required></select>
+                        </label>
+                        <button type="submit">Iniciar</button>
+                    </form>
+
+                    <form id="fuelForm" class="operation-form">
+                        <h3>Abastecer foguete</h3>
+                        <label>
+                            Foguete
+                            <select name="rocket" required></select>
+                        </label>
+                        <label>
+                            Quantidade (L)
+                            <input type="number" name="quantidade" min="1" placeholder="1200" required>
+                        </label>
+                        <button type="submit">Abastecer</button>
+                    </form>
+
+                    <form id="panelForm" class="operation-form">
+                        <h3>Ativar pain&eacute;is</h3>
+                        <label>
+                            Sat&eacute;lite
+                            <select name="satellite" required></select>
+                        </label>
+                        <label>
+                            Painel
+                            <select name="panel" required>
+                                <option value="Solar principal">Solar principal</option>
+                                <option value="Comunicacao">Comunica&ccedil;&atilde;o</option>
+                                <option value="Sensores">Sensores</option>
+                                <option value="Reserva">Reserva</option>
+                            </select>
+                        </label>
+                        <button type="submit">Ativar</button>
+                    </form>
+
+                    <form id="messageForm" class="operation-form">
+                        <h3>Enviar dados</h3>
+                        <label>
+                            Sat&eacute;lite
+                            <select name="satellite" required></select>
+                        </label>
+                        <label>
+                            Mensagem
+                            <textarea name="mensagem" rows="3" placeholder="Pacote de telemetria confirmado" required></textarea>
+                        </label>
+                        <button type="submit">Enviar</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Registro</p>
+                        <h2>Console de bordo</h2>
+                    </div>
+                </div>
+                <div class="event-log" id="eventLog" aria-live="polite"></div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
