@@ -18,6 +18,7 @@ let state = {
     missions: [],
     transmissions: 0,
     logs: [],
+    apod: null,
 };
 
 const elements = {
@@ -35,6 +36,10 @@ const elements = {
     fuelForm: document.querySelector("#fuelForm"),
     panelForm: document.querySelector("#panelForm"),
     messageForm: document.querySelector("#messageForm"),
+    nasaTitle: document.querySelector("#nasaTitle"),
+    nasaDate: document.querySelector("#nasaDate"),
+    nasaMedia: document.querySelector("#nasaMedia"),
+    nasaExplanation: document.querySelector("#nasaExplanation"),
 };
 
 elements.rocketForm.addEventListener("submit", createRocket);
@@ -49,7 +54,7 @@ bootstrap();
 async function bootstrap() {
     loadMeta();
     render();
-    await refreshResources();
+    await Promise.all([refreshResources(), refreshNasaPicture()]);
 }
 
 async function refreshResources() {
@@ -63,6 +68,21 @@ async function refreshResources() {
         addLog("API indisponivel", error.message);
         render();
     }
+}
+
+async function refreshNasaPicture() {
+    try {
+        const apod = await api("/nasa/apod");
+        state.apod = normalizeApod(apod);
+    } catch (error) {
+        state.apod = {
+            title: "Imagem da NASA indisponivel",
+            explanation: error.message,
+            mediaType: "error",
+        };
+    }
+
+    renderNasaPicture();
 }
 
 async function api(path, options = {}) {
@@ -139,12 +159,70 @@ function normalizeSatellite(satellite) {
     };
 }
 
+function normalizeApod(apod) {
+    return {
+        title: apod?.title ?? "Foto astronomica do dia",
+        explanation: apod?.explanation ?? "Descricao nao informada pela NASA.",
+        url: apod?.url ?? "",
+        hdurl: apod?.hdurl ?? "",
+        mediaType: apod?.mediaType ?? apod?.media_type ?? "",
+        date: apod?.date ?? "",
+        copyright: apod?.copyright ?? "",
+    };
+}
+
 function render() {
     renderCounters();
+    renderNasaPicture();
     renderRockets();
     renderSatellites();
     renderSelects();
     renderLog();
+}
+
+function renderNasaPicture() {
+    if (!elements.nasaTitle || !elements.nasaMedia || !elements.nasaExplanation || !elements.nasaDate) {
+        return;
+    }
+
+    const apod = state.apod;
+
+    if (!apod) {
+        elements.nasaTitle.textContent = "Astronomy Picture of the Day";
+        elements.nasaDate.textContent = "NASA";
+        elements.nasaExplanation.textContent = "Aguardando dados da API da NASA.";
+        elements.nasaMedia.replaceChildren(emptyState("Carregando imagem da NASA..."));
+        return;
+    }
+
+    elements.nasaTitle.textContent = apod.title;
+    elements.nasaDate.textContent = apod.date ? formatDate(apod.date) : "NASA APOD";
+    elements.nasaExplanation.textContent = apod.copyright
+        ? `${apod.explanation} Credito: ${apod.copyright}.`
+        : apod.explanation;
+
+    elements.nasaMedia.replaceChildren();
+
+    if (apod.mediaType === "image" && apod.url) {
+        const image = document.createElement("img");
+        image.src = apod.url;
+        image.alt = apod.title;
+        elements.nasaMedia.appendChild(image);
+        return;
+    }
+
+    if (apod.mediaType === "video" && apod.url) {
+        const link = document.createElement("a");
+        link.className = "nasa-link";
+        link.href = apod.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Abrir video da NASA";
+        elements.nasaMedia.appendChild(link);
+        return;
+    }
+
+    elements.nasaMedia.appendChild(emptyState("Midia da NASA indisponivel no momento."));
 }
 
 function renderCounters() {
@@ -595,6 +673,14 @@ function formatTime(value) {
         minute: "2-digit",
         second: "2-digit",
     }).format(new Date(value));
+}
+
+function formatDate(value) {
+    return new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+    }).format(new Date(`${value}T00:00:00`));
 }
 
 function setFormsDisabled(disabled) {

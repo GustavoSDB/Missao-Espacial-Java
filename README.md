@@ -39,6 +39,7 @@ Se sua senha for diferente, crie um arquivo `.env` na raiz do projeto:
 DB_USERNAME=postgres
 DB_PASSWORD=sua_senha_do_postgres
 DB_URL=jdbc:postgresql://localhost:5432/missao_espacial
+NASA_API_KEY=sua_chave_da_nasa
 ```
 
 O arquivo `.env` fica fora do Git porque contem senha. Use `.env.example` como modelo.
@@ -49,6 +50,7 @@ Tambem e possivel rodar usando variaveis de ambiente:
 $env:DB_USERNAME="postgres"
 $env:DB_PASSWORD="sua_senha"
 $env:DB_URL="jdbc:postgresql://localhost:5432/missao_espacial"
+$env:NASA_API_KEY="sua_chave_da_nasa"
 .\rodar.bat
 ```
 
@@ -112,6 +114,14 @@ curl -X POST http://localhost:8080/api/missoes/iniciar \
 curl http://localhost:8080/api/status
 ```
 
+### Consultar foto astronomica da NASA
+
+```bash
+curl http://localhost:8080/api/nasa/apod
+```
+
+A rota usa a API APOD da NASA. Se `NASA_API_KEY` nao for informada, a aplicacao usa `DEMO_KEY`.
+
 ## Rotas disponiveis
 
 - `GET /api/foguetes`
@@ -123,3 +133,4 @@ curl http://localhost:8080/api/status
 - `POST /api/satelites/{id}/enviar-dados`
 - `POST /api/missoes/iniciar`
 - `GET /api/status`
+- `GET /api/nasa/apod`

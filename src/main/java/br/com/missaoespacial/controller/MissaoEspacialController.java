@@ -4,12 +4,14 @@ import br.com.missaoespacial.dto.AbastecimentoRequest;
 import br.com.missaoespacial.dto.FogueteRequest;
 import br.com.missaoespacial.dto.MensagemRequest;
 import br.com.missaoespacial.dto.MissaoRequest;
+import br.com.missaoespacial.dto.NasaApodResponse;
 import br.com.missaoespacial.dto.PainelRequest;
 import br.com.missaoespacial.dto.SateliteRequest;
 import br.com.missaoespacial.dto.StatusMissaoResponse;
 import br.com.missaoespacial.model.Foguete;
 import br.com.missaoespacial.model.Satelite;
 import br.com.missaoespacial.service.CentroControleService;
+import br.com.missaoespacial.service.NasaService;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -22,15 +24,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClientException;
 
 @RestController
 @RequestMapping("/api")
 public class MissaoEspacialController {
 
     private final CentroControleService centroControleService;
+    private final NasaService nasaService;
 
-    public MissaoEspacialController(CentroControleService centroControleService) {
+    public MissaoEspacialController(CentroControleService centroControleService, NasaService nasaService) {
         this.centroControleService = centroControleService;
+        this.nasaService = nasaService;
     }
 
     @PostMapping("/foguetes")
@@ -80,6 +85,11 @@ public class MissaoEspacialController {
         return centroControleService.statusMissao();
     }
 
+    @GetMapping("/nasa/apod")
+    public NasaApodResponse fotoAstronomicaDoDia() {
+        return nasaService.buscarFotoDoDia();
+    }
+
     @ExceptionHandler(NoSuchElementException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> tratarNaoEncontrado(NoSuchElementException exception) {
@@ -90,5 +100,11 @@ public class MissaoEspacialController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> tratarRequisicaoInvalida(RuntimeException exception) {
         return Map.of("erro", exception.getMessage());
+    }
+
+    @ExceptionHandler(RestClientException.class)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public Map<String, String> tratarErroNasa(RestClientException exception) {
+        return Map.of("erro", "Nao foi possivel consultar a API da NASA.");
     }
 }
