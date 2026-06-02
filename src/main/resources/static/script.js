@@ -1,6 +1,7 @@
 const API_BASE = window.location.protocol === "file:" ? "http://localhost:8080/api" : "/api";
 const META_KEY = "central-missoes-espaciais-meta";
 const PANEL_CHARGE = 8;
+const ROCKET_MAX_FUEL = 10000;
 
 const labels = {
     Manutencao: "Manutencao",
@@ -254,7 +255,11 @@ function renderRockets() {
         title.className = "resource-title";
         title.textContent = rocket.name;
 
-        top.append(title, statusBadge(rocket.status));
+        const actions = document.createElement("div");
+        actions.className = "resource-actions";
+        actions.append(statusBadge(rocket.status), createDeleteButton(`Excluir foguete ${rocket.name}`, () => deleteRocket(rocket)));
+
+        top.append(title, actions);
 
         const details = document.createElement("div");
         details.className = "details-grid";
@@ -267,7 +272,7 @@ function renderRockets() {
         const meter = document.createElement("div");
         meter.className = "meter";
         const fuelBar = document.createElement("span");
-        fuelBar.style.width = `${Math.min(100, rocket.fuel / 80)}%`;
+        fuelBar.style.width = `${clamp((rocket.fuel / ROCKET_MAX_FUEL) * 100, 0, 100)}%`;
         meter.appendChild(fuelBar);
 
         card.append(top, details, meter);
@@ -294,7 +299,14 @@ function renderSatellites() {
         title.className = "resource-title";
         title.textContent = satellite.name;
 
-        top.append(title, statusBadge(satellite.status));
+        const actions = document.createElement("div");
+        actions.className = "resource-actions";
+        actions.append(
+            statusBadge(satellite.status),
+            createDeleteButton(`Excluir satelite ${satellite.name}`, () => deleteSatellite(satellite))
+        );
+
+        top.append(title, actions);
 
         const details = document.createElement("div");
         details.className = "details-grid";
@@ -326,16 +338,30 @@ function renderSatellites() {
 }
 
 function renderSelects() {
-    const rocketSelects = document.querySelectorAll('select[name="rocket"]');
-    const satelliteSelects = document.querySelectorAll('select[name="satellite"]');
+    const missionRocketSelect = elements.missionForm.querySelector('select[name="rocket"]');
+    const fuelRocketSelect = elements.fuelForm.querySelector('select[name="rocket"]');
+    const missionSatelliteSelect = elements.missionForm.querySelector('select[name="satellite"]');
+    const panelSatelliteSelect = elements.panelForm.querySelector('select[name="satellite"]');
+    const messageSatelliteSelect = elements.messageForm.querySelector('select[name="satellite"]');
 
-    rocketSelects.forEach((select) => {
-        fillSelect(select, state.rockets, (rocket) => `${rocket.name} - ${labelFor(rocket.status)}`);
-    });
+    fillSelect(
+        missionRocketSelect,
+        state.rockets.filter(isRocketReadyForMission),
+        (rocket) => `${rocket.name} - ${labelFor(rocket.status)}`
+    );
+    fillSelect(
+        fuelRocketSelect,
+        state.rockets.filter(isRocketAvailableForFuel),
+        (rocket) => `${rocket.name} - ${labelFor(rocket.status)}`
+    );
 
-    satelliteSelects.forEach((select) => {
-        fillSelect(select, state.satellites, (satellite) => `${satellite.name} - ${labelFor(satellite.status)}`);
-    });
+    fillSelect(
+        missionSatelliteSelect,
+        state.satellites.filter(isSatelliteAvailableForMission),
+        (satellite) => `${satellite.name} - ${labelFor(satellite.status)}`
+    );
+    fillSelect(panelSatelliteSelect, state.satellites, (satellite) => `${satellite.name} - ${labelFor(satellite.status)}`);
+    fillSelect(messageSatelliteSelect, state.satellites, (satellite) => `${satellite.name} - ${labelFor(satellite.status)}`);
 }
 
 function renderLog() {
@@ -424,6 +450,10 @@ async function startMission(event) {
         return;
     }
 
+    if (!isRocketReadyForMission(rocket) || !isSatelliteAvailableForMission(satellite)) {
+        return;
+    }
+
     await runOperation(async () => {
         const response = await api("/missoes/iniciar", {
             method: "POST",
@@ -444,6 +474,30 @@ async function startMission(event) {
     });
 }
 
+async function deleteRocket(rocket) {
+    if (!rocket || !window.confirm(`Excluir foguete ${rocket.name}?`)) {
+        return;
+    }
+
+    await runOperation(async () => {
+        await api(`/foguetes/${rocket.id}`, { method: "DELETE" });
+        state.missions = state.missions.filter((mission) => mission.rocketId !== rocket.id);
+        addLog("Foguete excluido", `${rocket.name} foi removido do hangar.`);
+    });
+}
+
+async function deleteSatellite(satellite) {
+    if (!satellite || !window.confirm(`Excluir satelite ${satellite.name}?`)) {
+        return;
+    }
+
+    await runOperation(async () => {
+        await api(`/satelites/${satellite.id}`, { method: "DELETE" });
+        state.missions = state.missions.filter((mission) => mission.satelliteId !== satellite.id);
+        addLog("Satelite excluido", `${satellite.name} foi removido da lista orbital.`);
+    });
+}
+
 async function fuelRocket(event) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -452,6 +506,10 @@ async function fuelRocket(event) {
     const amount = Number(data.get("quantidade"));
 
     if (!rocket || amount <= 0) {
+        return;
+    }
+
+    if (!isRocketAvailableForFuel(rocket)) {
         return;
     }
 
@@ -537,6 +595,10 @@ function addLog(title, message) {
 }
 
 function fillSelect(select, items, labelBuilder) {
+    if (!select) {
+        return;
+    }
+
     const current = select.value;
     select.replaceChildren();
 
@@ -567,6 +629,17 @@ function statusBadge(status) {
     badge.className = `status-badge ${statusClass(status)}`;
     badge.textContent = labelFor(status);
     return badge;
+}
+
+function createDeleteButton(label, onClick) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "delete-button";
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    button.textContent = "Excluir";
+    button.addEventListener("click", onClick);
+    return button;
 }
 
 function detail(label, value) {
@@ -647,8 +720,20 @@ function isRocketInMission(rocket) {
     return rocket?.status === "Em missao";
 }
 
+function isRocketAvailableForFuel(rocket) {
+    return !isRocketInMission(rocket);
+}
+
+function isRocketReadyForMission(rocket) {
+    return rocket?.status === "Pronto";
+}
+
 function isSatelliteInMission(satellite) {
     return satellite?.status === "Em orbita" || satellite?.status === "Paineis ativos";
+}
+
+function isSatelliteAvailableForMission(satellite) {
+    return !isSatelliteInMission(satellite);
 }
 
 function createId(prefix) {

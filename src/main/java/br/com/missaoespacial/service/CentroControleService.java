@@ -45,8 +45,23 @@ public class CentroControleService {
     }
 
     @Transactional
+    public void deletarFoguete(long fogueteId) {
+        Foguete foguete = buscarFoguete(fogueteId);
+        fogueteRepository.delete(foguete);
+    }
+
+    @Transactional
+    public void deletarSatelite(long sateliteId) {
+        Satelite satelite = buscarSatelite(sateliteId);
+        sateliteRepository.delete(satelite);
+    }
+
+    @Transactional
     public Foguete abastecerFoguete(long fogueteId, float quantidade) {
         Foguete foguete = buscarFoguete(fogueteId);
+        if (fogueteEstaEmMissao(foguete)) {
+            throw new IllegalStateException("Foguete em missao nao pode ser abastecido.");
+        }
         foguete.abastecer(quantidade);
         return fogueteRepository.save(foguete);
     }
@@ -73,6 +88,14 @@ public class CentroControleService {
     public String iniciarMissao(long sateliteId, long fogueteId) {
         Satelite satelite = buscarSatelite(sateliteId);
         Foguete foguete = buscarFoguete(fogueteId);
+
+        if (!fogueteEstaProntoParaMissao(foguete)) {
+            throw new IllegalStateException("Foguete precisa estar Pronto para iniciar missao.");
+        }
+
+        if (sateliteJaEstaEmOrbita(satelite)) {
+            throw new IllegalStateException("Satelite em orbita nao pode iniciar nova missao.");
+        }
 
         if (foguete.getCargaMaxima() < satelite.getMassa()) {
             throw new IllegalStateException("Massa do satelite ultrapassa capacidade do foguete. Missao cancelada.");
@@ -103,6 +126,18 @@ public class CentroControleService {
                 .orElseThrow(() -> new NoSuchElementException("Satelite nao encontrado: " + id));
     }
 
+    private boolean fogueteEstaProntoParaMissao(Foguete foguete) {
+        return "Pronto".equals(foguete.getStatus());
+    }
+
+    private boolean fogueteEstaEmMissao(Foguete foguete) {
+        return "Em missao".equals(foguete.getStatus());
+    }
+
+    private boolean sateliteJaEstaEmOrbita(Satelite satelite) {
+        return "Em orbita".equals(satelite.getStatus()) || "Paineis ativos".equals(satelite.getStatus());
+    }
+
     private void validarFoguete(Foguete foguete) {
         if (foguete == null) {
             throw new IllegalArgumentException("Foguete nao informado.");
@@ -113,8 +148,14 @@ public class CentroControleService {
         if (foguete.getCombustivelRestante() < 0) {
             throw new IllegalArgumentException("Combustivel nao pode ser negativo.");
         }
+        if (foguete.getCombustivelRestante() > Foguete.COMBUSTIVEL_MAXIMO) {
+            throw new IllegalArgumentException("Combustivel maximo do foguete e 10000.");
+        }
         if (foguete.getCargaMaxima() <= 0) {
             throw new IllegalArgumentException("Carga maxima deve ser maior que zero.");
+        }
+        if (foguete.getCargaMaxima() > Foguete.CARGA_MAXIMA_PERMITIDA) {
+            throw new IllegalArgumentException("Carga maxima do foguete e 10000.");
         }
     }
 

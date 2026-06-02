@@ -15,6 +15,7 @@ import br.com.missaoespacial.service.NasaService;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,6 +50,12 @@ public class MissaoEspacialController {
         return centroControleService.listarFoguetes();
     }
 
+    @DeleteMapping("/foguetes/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletarFoguete(@PathVariable long id) {
+        centroControleService.deletarFoguete(id);
+    }
+
     @PostMapping("/foguetes/{id}/abastecer")
     public Foguete abastecerFoguete(@PathVariable long id, @RequestBody AbastecimentoRequest request) {
         return centroControleService.abastecerFoguete(id, request.getQuantidade());
@@ -63,6 +70,12 @@ public class MissaoEspacialController {
     @GetMapping("/satelites")
     public List<Satelite> listarSatelites() {
         return centroControleService.listarSatelites();
+    }
+
+    @DeleteMapping("/satelites/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletarSatelite(@PathVariable long id) {
+        centroControleService.deletarSatelite(id);
     }
 
     @PostMapping("/satelites/{id}/ativar-paineis")

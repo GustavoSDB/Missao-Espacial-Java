@@ -121,6 +121,11 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgba(94, 231, 247, 0.18);
 }
 
+select option {
+    color: #071015;
+    background: #f7f9ff;
+}
+
 .space-layer {
     position: fixed;
     inset: 0;
@@ -414,6 +419,13 @@ h3 {
     margin-bottom: 14px;
 }
 
+.resource-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 .resource-title {
     margin: 0;
     font-size: 1.05rem;
@@ -457,6 +469,20 @@ h3 {
 .status-em-teste,
 .status-em-calibracao {
     background: var(--violet);
+}
+
+.delete-button {
+    min-height: 30px;
+    padding: 5px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 0.76rem;
+    box-shadow: none;
+    background: rgba(255, 107, 107, 0.78);
+}
+
+.delete-button:hover {
+    box-shadow: 0 10px 22px rgba(255, 107, 107, 0.2);
 }
 
 .details-grid {

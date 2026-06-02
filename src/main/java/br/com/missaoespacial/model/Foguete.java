@@ -11,6 +11,9 @@ import jakarta.persistence.Table;
 @Table(name = "foguetes")
 public class Foguete {
 
+    public static final float COMBUSTIVEL_MAXIMO = 10000;
+    public static final float CARGA_MAXIMA_PERMITIDA = 10000;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -40,6 +43,9 @@ public class Foguete {
     public void abastecer(float quantidade) {
         if (quantidade <= 0) {
             throw new IllegalArgumentException("A quantidade de combustivel deve ser maior que zero.");
+        }
+        if (combustivelRestante + quantidade > COMBUSTIVEL_MAXIMO) {
+            throw new IllegalArgumentException("Combustivel maximo do foguete e 10000.");
         }
         combustivelRestante += quantidade;
     }

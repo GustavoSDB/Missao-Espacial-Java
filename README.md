@@ -126,9 +126,11 @@ A rota usa a API APOD da NASA. Se `NASA_API_KEY` nao for informada, a aplicacao 
 
 - `GET /api/foguetes`
 - `POST /api/foguetes`
+- `DELETE /api/foguetes/{id}`
 - `POST /api/foguetes/{id}/abastecer`
 - `GET /api/satelites`
 - `POST /api/satelites`
+- `DELETE /api/satelites/{id}`
 - `POST /api/satelites/{id}/ativar-paineis`
 - `POST /api/satelites/{id}/enviar-dados`
 - `POST /api/missoes/iniciar`

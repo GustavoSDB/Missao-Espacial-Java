@@ -99,11 +99,11 @@
                     </label>
                     <label>
                         Combust&iacute;vel inicial (L)
-                        <input type="number" name="combustivel" min="0" placeholder="1200" required>
+                        <input type="number" name="combustivel" min="0" max="10000" placeholder="1200" required>
                     </label>
                     <label>
                         Carga m&aacute;xima (kg)
-                        <input type="number" name="carga" min="1" placeholder="25000" required>
+                        <input type="number" name="carga" min="1" max="10000" placeholder="10000" required>
                     </label>
                     <label>
                         Status
@@ -195,7 +195,7 @@
                         </label>
                         <label>
                             Quantidade (L)
-                            <input type="number" name="quantidade" min="1" placeholder="1200" required>
+                            <input type="number" name="quantidade" min="1" max="10000" placeholder="1200" required>
                         </label>
                         <button type="submit">Abastecer</button>
                     </form>
